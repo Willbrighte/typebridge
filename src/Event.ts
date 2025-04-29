@@ -6,7 +6,6 @@ import Ajv from 'ajv';
 import type { EventBridgeEvent } from 'aws-lambda';
 import { FromSchema, JSONSchema } from 'json-schema-to-ts';
 
-import { Logger } from 'pino';
 import { Bus } from './Bus';
 
 const ajv = new Ajv();
@@ -18,20 +17,17 @@ export class Event<N extends string, S extends JSONSchema> {
   private _schema: S;
   private _validate: Ajv.ValidateFunction;
   private _pattern: { 'detail-type': [N]; source: string[] };
-  private _logger: Logger;
 
   constructor({
     name,
     source,
     bus,
     schema,
-    logger,
   }: {
     name: N;
     source: string;
     bus: Bus;
     schema: S;
-    logger: Logger;
   }) {
     this._name = name;
     this._source = source;
@@ -39,7 +35,6 @@ export class Event<N extends string, S extends JSONSchema> {
     this._schema = schema;
     this._validate = ajv.compile(schema);
     this._pattern = { source: [source], 'detail-type': [name] };
-    this._logger = logger;
   }
 
   get name(): N {
@@ -83,17 +78,19 @@ export class Event<N extends string, S extends JSONSchema> {
   }
 
   create(event: FromSchema<S>): PutEventsRequestEntry {
-    if (!this._validate(event)) {
-      this._logger.error(
-        'Event does not satisfy schema' + JSON.stringify(this._validate.errors),
-      );
-    }
-
     return {
       Source: this._source,
       DetailType: this._name,
       Detail: JSON.stringify(event),
     };
+  }
+
+  validate(event: FromSchema<S>): void {
+    if (!this._validate(event)) {
+      throw new Error(
+        `Event validation failed: ${JSON.stringify(this._validate.errors)}`,
+      );
+    }
   }
 
   async publish(event: FromSchema<S>): Promise<PutEventsResponse> {
