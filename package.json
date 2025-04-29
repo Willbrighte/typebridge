@@ -1,13 +1,13 @@
 {
-  "name": "typebridge-brighte",
+  "name": "@brighte/typebridge",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Willbrighte/typebridge-brighte"
+    "url": "git+https://github.com/Willbrighte/typebridge-brighte.git"
   },
   "version": "1.1.0",
   "description": "Typescript toolbox for AWS EventBridge",
   "main": "dist/index.js",
-  "author": "brighte",
+  "author": "Frédéric Barthelet",
   "license": "MIT",
   "sideEffects": false,
   "scripts": {
